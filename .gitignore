@@ -1,3 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Local overrides
+*.local
+*.sw?
+
 # Logs
 logs
 *.log
