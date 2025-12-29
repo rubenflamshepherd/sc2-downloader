@@ -1,6 +1,8 @@
 import QuoteCategory from './QuoteCategory';
 
-export default function UnitPanel({ unit }) {
+export default function UnitPanel({ unit, race = 'protoss' }) {
+  const primaryClass = race === 'terran' ? 'text-terran-primary' : race === 'zerg' ? 'text-zerg-primary' : 'text-protoss-primary';
+
   if (!unit) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -16,10 +18,10 @@ export default function UnitPanel({ unit }) {
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      <h1 className="text-2xl font-bold text-protoss-primary mb-6">{unit.name}</h1>
+      <h1 className={`text-2xl font-bold ${primaryClass} mb-6`}>{unit.name}</h1>
 
       {unit.categories.map((category, index) => (
-        <QuoteCategory key={index} category={category} />
+        <QuoteCategory key={index} category={category} race={race} />
       ))}
     </div>
   );

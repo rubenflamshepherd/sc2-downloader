@@ -1,6 +1,10 @@
 const cheerio = require('cheerio');
 
-const WIKI_URL = 'https://starcraft.fandom.com/wiki/StarCraft_II_unit_quotations/Protoss';
+const WIKI_URLS = {
+  protoss: 'https://starcraft.fandom.com/wiki/StarCraft_II_unit_quotations/Protoss',
+  terran: 'https://starcraft.fandom.com/wiki/StarCraft_II_unit_quotations/Terran',
+  zerg: 'https://starcraft.fandom.com/wiki/StarCraft_II_unit_quotations/Zerg',
+};
 
 async function fetchPage(url) {
   const response = await fetch(url);
@@ -40,6 +44,33 @@ function parseWikiPage(html) {
     /^Ready/i,
     /^Morph/i,
     /^Engaging/i,
+    /^Cloaked/i,
+    /^Abilit/i,
+    /^Nuke/i,
+    /^Tactical/i,
+    /^EMP/i,
+    /^Snipe/i,
+    /^Siege/i,
+    /^Tank mode/i,
+    /^Yamato/i,
+    /^Jump/i,
+    /^Stim/i,
+    /^Building/i,
+    /^Repairing/i,
+    /^Research/i,
+    /^Upgrade/i,
+    /^Scanner/i,
+    /^Call/i,
+    /^Supply/i,
+    /^MULE/i,
+    /^Load/i,
+    /^Unload/i,
+    /^Lift/i,
+    /^Land/i,
+    /^Auto/i,
+    /^Cloak/i,
+    /^Decloak/i,
+    /^Bunker/i,
   ];
 
   function matchesCategory(text) {
@@ -47,14 +78,15 @@ function parseWikiPage(html) {
   }
 
   // Process all elements in order
-  content.find('h3, h4, h5, p, ul').each((_, element) => {
+  // Note: Zerg uses H2 for sections and H3 for units, while Protoss/Terran use H3/H4
+  content.find('h2, h3, h4, h5, p, ul').each((_, element) => {
     const $el = $(element);
     const tagName = element.tagName.toLowerCase();
 
-    // H3 = Main section (Versus Units, Campaign and Co-op Missions Units, Heroes)
-    if (tagName === 'h3') {
+    // H2 = Main section for Zerg pages
+    if (tagName === 'h2') {
       const sectionName = $el.find('.mw-headline').text().trim();
-      if (sectionName && !sectionName.includes('References') && !sectionName.includes('Navigation') && !sectionName.includes('Contents')) {
+      if (sectionName && !sectionName.includes('References') && !sectionName.includes('Navigation') && !sectionName.includes('Contents') && !sectionName.includes('See also')) {
         currentSection = {
           name: sectionName,
           units: []
@@ -65,7 +97,32 @@ function parseWikiPage(html) {
       }
     }
 
-    // H4 = Unit name (Zealot, Stalker, etc.)
+    // H3 = Main section for Protoss/Terran OR Unit name for Zerg
+    if (tagName === 'h3') {
+      const headlineName = $el.find('.mw-headline').text().trim();
+      if (headlineName && !headlineName.includes('References') && !headlineName.includes('Navigation') && !headlineName.includes('Contents')) {
+        // Check if we already have a section from H2 - if so, this is a unit
+        if (currentSection) {
+          currentUnit = {
+            name: headlineName,
+            categories: []
+          };
+          currentSection.units.push(currentUnit);
+          currentCategory = null;
+        } else {
+          // No section yet, so this H3 is a section (Protoss/Terran style)
+          currentSection = {
+            name: headlineName,
+            units: []
+          };
+          sections.push(currentSection);
+          currentUnit = null;
+          currentCategory = null;
+        }
+      }
+    }
+
+    // H4 = Unit name for Protoss/Terran OR Sub-unit for Zerg
     if (tagName === 'h4' && currentSection) {
       const unitName = $el.find('.mw-headline').text().trim();
       if (unitName) {
@@ -166,11 +223,16 @@ function parseWikiPage(html) {
   return sections.filter(s => s.units.length > 0);
 }
 
-async function main() {
-  console.log('Fetching wiki page...');
-  const html = await fetchPage(WIKI_URL);
+async function scrapeRace(race) {
+  const url = WIKI_URLS[race];
+  if (!url) {
+    throw new Error(`Unknown race: ${race}. Available: ${Object.keys(WIKI_URLS).join(', ')}`);
+  }
 
-  console.log('Parsing page structure...');
+  console.log(`Fetching ${race} wiki page...`);
+  const html = await fetchPage(url);
+
+  console.log(`Parsing ${race} page structure...`);
   const sections = parseWikiPage(html);
 
   // Count totals
@@ -185,30 +247,56 @@ async function main() {
     }
   }
 
-  console.log(`\nSummary:`);
-  console.log(`- Sections: ${sections.length}`);
-  console.log(`- Units: ${totalUnits}`);
-  console.log(`- Quotes: ${totalQuotes}`);
+  console.log(`${race} summary:`);
+  console.log(`  - Sections: ${sections.length}`);
+  console.log(`  - Units: ${totalUnits}`);
+  console.log(`  - Quotes: ${totalQuotes}`);
 
-  // Preview first unit
-  if (sections.length > 0 && sections[0].units.length > 0) {
-    const firstUnit = sections[0].units[0];
-    console.log(`\nPreview (${firstUnit.name}):`);
-    if (firstUnit.categories.length > 0) {
-      const firstCat = firstUnit.categories[0];
-      console.log(`  Category: ${firstCat.name}`);
-      if (firstCat.quotes.length > 0) {
-        console.log(`  First quote: "${firstCat.quotes[0].text}"`);
-        console.log(`  Audio URL: ${firstCat.quotes[0].audioUrl}`);
-      }
-    }
-  }
+  return { sections, totalUnits, totalQuotes };
+}
 
-  // Write output
+async function main() {
+  const args = process.argv.slice(2);
+  const race = args[0] || 'all';
+
   const fs = require('fs');
   const path = require('path');
-  const output = { sections };
   const outputPath = path.join(__dirname, '..', 'frontend', 'src', 'data', 'quotations.json');
+
+  let output;
+
+  if (race === 'all') {
+    // Scrape all races
+    const races = {};
+    for (const raceName of Object.keys(WIKI_URLS)) {
+      const data = await scrapeRace(raceName);
+      races[raceName] = { sections: data.sections };
+    }
+    output = { races };
+
+    // Overall summary
+    console.log('\n=== Overall Summary ===');
+    let grandTotalUnits = 0;
+    let grandTotalQuotes = 0;
+    for (const [raceName, data] of Object.entries(races)) {
+      for (const section of data.sections) {
+        grandTotalUnits += section.units.length;
+        for (const unit of section.units) {
+          for (const category of unit.categories) {
+            grandTotalQuotes += category.quotes.length;
+          }
+        }
+      }
+    }
+    console.log(`Total races: ${Object.keys(races).length}`);
+    console.log(`Total units: ${grandTotalUnits}`);
+    console.log(`Total quotes: ${grandTotalQuotes}`);
+  } else {
+    // Scrape single race
+    const data = await scrapeRace(race);
+    output = { races: { [race]: { sections: data.sections } } };
+  }
+
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
   console.log(`\nWritten to: ${outputPath}`);
 }

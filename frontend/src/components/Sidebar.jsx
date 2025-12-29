@@ -1,10 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function Sidebar({ sections, selectedUnit, onSelectUnit }) {
+const raceConfig = {
+  protoss: {
+    label: 'Protoss',
+    bgClass: 'bg-protoss-dark',
+    borderClass: 'border-protoss-primary/20',
+    primaryClass: 'text-protoss-primary',
+    inputBg: 'bg-protoss-darker',
+    inputBorder: 'border-protoss-primary/30',
+    inputFocus: 'focus:border-protoss-primary',
+    selectedBg: 'bg-protoss-primary/20',
+  },
+  terran: {
+    label: 'Terran',
+    bgClass: 'bg-terran-dark',
+    borderClass: 'border-terran-primary/20',
+    primaryClass: 'text-terran-primary',
+    inputBg: 'bg-terran-darker',
+    inputBorder: 'border-terran-primary/30',
+    inputFocus: 'focus:border-terran-primary',
+    selectedBg: 'bg-terran-primary/20',
+  },
+  zerg: {
+    label: 'Zerg',
+    bgClass: 'bg-zerg-dark',
+    borderClass: 'border-zerg-primary/20',
+    primaryClass: 'text-zerg-primary',
+    inputBg: 'bg-zerg-darker',
+    inputBorder: 'border-zerg-primary/30',
+    inputFocus: 'focus:border-zerg-primary',
+    selectedBg: 'bg-zerg-primary/20',
+  },
+};
+
+export default function Sidebar({ sections, selectedUnit, onSelectUnit, selectedRace, onRaceChange, races }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedSections, setExpandedSections] = useState(
-    sections.reduce((acc, section) => ({ ...acc, [section.name]: true }), {})
-  );
+  const [expandedSections, setExpandedSections] = useState({});
+
+  const config = raceConfig[selectedRace] || raceConfig.protoss;
+
+  useEffect(() => {
+    setExpandedSections(
+      sections.reduce((acc, section) => ({ ...acc, [section.name]: true }), {})
+    );
+  }, [sections]);
 
   const toggleSection = (sectionName) => {
     setExpandedSections(prev => ({
@@ -21,15 +60,32 @@ export default function Sidebar({ sections, selectedUnit, onSelectUnit }) {
   })).filter(section => section.units.length > 0);
 
   return (
-    <div className="w-72 bg-protoss-dark border-r border-protoss-primary/20 flex flex-col h-screen">
-      <div className="p-4 border-b border-protoss-primary/20">
-        <h1 className="text-lg font-bold text-protoss-primary mb-3">SC2 Protoss Quotes</h1>
+    <div className={`w-72 ${config.bgClass} border-r ${config.borderClass} flex flex-col h-screen`}>
+      <div className={`p-4 border-b ${config.borderClass}`}>
+        <h1 className={`text-lg font-bold ${config.primaryClass} mb-3`}>SC2 Quotes Browser</h1>
+
+        <div className="flex gap-1 mb-3">
+          {races.map((race) => (
+            <button
+              key={race}
+              onClick={() => onRaceChange(race)}
+              className={`flex-1 py-1.5 px-2 text-sm font-medium rounded transition-colors capitalize ${
+                selectedRace === race
+                  ? `${raceConfig[race].selectedBg} ${raceConfig[race].primaryClass}`
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+              }`}
+            >
+              {raceConfig[race]?.label || race}
+            </button>
+          ))}
+        </div>
+
         <input
           type="text"
           placeholder="Search units..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-3 py-2 bg-protoss-darker border border-protoss-primary/30 rounded text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-protoss-primary"
+          className={`w-full px-3 py-2 ${config.inputBg} border ${config.inputBorder} rounded text-sm text-gray-200 placeholder-gray-500 focus:outline-none ${config.inputFocus}`}
         />
       </div>
 
@@ -59,7 +115,7 @@ export default function Sidebar({ sections, selectedUnit, onSelectUnit }) {
                     onClick={() => onSelectUnit(unit)}
                     className={`w-full text-left py-1.5 px-2 rounded text-sm transition-colors ${
                       selectedUnit?.name === unit.name
-                        ? 'bg-protoss-primary/20 text-protoss-primary'
+                        ? `${config.selectedBg} ${config.primaryClass}`
                         : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                     }`}
                   >
@@ -72,7 +128,7 @@ export default function Sidebar({ sections, selectedUnit, onSelectUnit }) {
         ))}
       </div>
 
-      <div className="p-3 border-t border-protoss-primary/20 text-xs text-gray-500">
+      <div className={`p-3 border-t ${config.borderClass} text-xs text-gray-500`}>
         Audio from StarCraft Wiki
       </div>
     </div>
