@@ -2,7 +2,9 @@ import QuoteCategory from './QuoteCategory';
 import QuoteSearchResults from './QuoteSearchResults';
 
 export default function UnitPanel({ unit, race = 'protoss', sections = [], quoteSearchQuery = '' }) {
-  const primaryClass = race === 'terran' ? 'text-terran-primary' : race === 'zerg' ? 'text-zerg-primary' : 'text-protoss-primary';
+  // Use unit's race for styling when available (for "all" tab), otherwise use selected race
+  const effectiveRace = unit?.race || race;
+  const primaryClass = effectiveRace === 'terran' ? 'text-terran-primary' : effectiveRace === 'zerg' ? 'text-zerg-primary' : 'text-protoss-primary';
 
   // Show search results when there's a quote search query
   if (quoteSearchQuery) {
@@ -27,7 +29,7 @@ export default function UnitPanel({ unit, race = 'protoss', sections = [], quote
       <h1 className={`text-2xl font-bold ${primaryClass} mb-6`}>{unit.name}</h1>
 
       {unit.categories.map((category, index) => (
-        <QuoteCategory key={index} category={category} race={race} />
+        <QuoteCategory key={index} category={category} race={effectiveRace} />
       ))}
     </div>
   );

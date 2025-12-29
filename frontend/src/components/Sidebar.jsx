@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 
 const raceConfig = {
+  all: {
+    label: 'All',
+    bgClass: 'bg-gray-900',
+    borderClass: 'border-gray-700/20',
+    primaryClass: 'text-gray-200',
+    inputBg: 'bg-gray-950',
+    inputBorder: 'border-gray-600/30',
+    inputFocus: 'focus:border-gray-400',
+    selectedBg: 'bg-gray-600/20',
+  },
   protoss: {
     label: 'Protoss',
     bgClass: 'bg-protoss-dark',
@@ -116,19 +126,22 @@ export default function Sidebar({ sections, selectedUnit, onSelectUnit, selected
 
             {expandedSections[section.name] && (
               <div className="ml-4">
-                {section.units.map((unit) => (
-                  <button
-                    key={unit.name}
-                    onClick={() => onSelectUnit(unit)}
-                    className={`w-full text-left py-1.5 px-2 rounded text-sm transition-colors ${
-                      selectedUnit?.name === unit.name
-                        ? `${config.selectedBg} ${config.primaryClass}`
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    }`}
-                  >
-                    {unit.name}
-                  </button>
-                ))}
+                {section.units.map((unit) => {
+                  const unitConfig = unit.race ? raceConfig[unit.race] : config;
+                  return (
+                    <button
+                      key={`${section.name}-${unit.name}`}
+                      onClick={() => onSelectUnit(unit)}
+                      className={`w-full text-left py-1.5 px-2 rounded text-sm transition-colors ${
+                        selectedUnit?.name === unit.name
+                          ? `${unitConfig.selectedBg} ${unitConfig.primaryClass}`
+                          : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                      }`}
+                    >
+                      {unit.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

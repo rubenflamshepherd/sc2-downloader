@@ -1,9 +1,13 @@
 import { useMemo } from 'react';
 import QuoteLine from './QuoteLine';
 
+const getRaceStyles = (race) => ({
+  primaryClass: race === 'terran' ? 'text-terran-primary' : race === 'zerg' ? 'text-zerg-primary' : 'text-protoss-primary',
+  badgeBg: race === 'terran' ? 'bg-terran-primary/20' : race === 'zerg' ? 'bg-zerg-primary/20' : 'bg-protoss-primary/20',
+});
+
 export default function QuoteSearchResults({ sections, searchQuery, race = 'protoss' }) {
-  const primaryClass = race === 'terran' ? 'text-terran-primary' : race === 'zerg' ? 'text-zerg-primary' : 'text-protoss-primary';
-  const badgeBg = race === 'terran' ? 'bg-terran-primary/20' : race === 'zerg' ? 'bg-zerg-primary/20' : 'bg-protoss-primary/20';
+  const defaultStyles = getRaceStyles(race);
 
   const results = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -20,6 +24,7 @@ export default function QuoteSearchResults({ sections, searchQuery, race = 'prot
                 quote,
                 unitName: unit.name,
                 categoryName: category.name,
+                race: unit.race || race,
               });
             }
           }
@@ -28,7 +33,7 @@ export default function QuoteSearchResults({ sections, searchQuery, race = 'prot
     }
 
     return matches;
-  }, [sections, searchQuery]);
+  }, [sections, searchQuery, race]);
 
   if (!searchQuery.trim()) {
     return (
@@ -59,22 +64,25 @@ export default function QuoteSearchResults({ sections, searchQuery, race = 'prot
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className={`text-2xl font-bold ${primaryClass}`}>Search Results</h1>
+        <h1 className={`text-2xl font-bold ${defaultStyles.primaryClass}`}>Search Results</h1>
         <span className="text-gray-400 text-sm">{results.length} quotes found</span>
       </div>
 
       <div className="space-y-1">
-        {results.map((result, index) => (
-          <div key={index} className="rounded hover:bg-white/5">
-            <div className="flex items-center gap-2 px-3 pt-2">
-              <span className={`text-xs px-2 py-0.5 rounded ${badgeBg} ${primaryClass}`}>
-                {result.unitName}
-              </span>
-              <span className="text-xs text-gray-500">{result.categoryName}</span>
+        {results.map((result, index) => {
+          const styles = getRaceStyles(result.race);
+          return (
+            <div key={index} className="rounded hover:bg-white/5">
+              <div className="flex items-center gap-2 px-3 pt-2">
+                <span className={`text-xs px-2 py-0.5 rounded ${styles.badgeBg} ${styles.primaryClass}`}>
+                  {result.unitName}
+                </span>
+                <span className="text-xs text-gray-500">{result.categoryName}</span>
+              </div>
+              <QuoteLine quote={result.quote} race={result.race} />
             </div>
-            <QuoteLine quote={result.quote} race={race} />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
