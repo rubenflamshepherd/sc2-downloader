@@ -33,7 +33,7 @@ const raceConfig = {
   },
 };
 
-export default function Sidebar({ sections, selectedUnit, onSelectUnit, selectedRace, onRaceChange, races }) {
+export default function Sidebar({ sections, selectedUnit, onSelectUnit, selectedRace, onRaceChange, races, quoteSearchQuery, onQuoteSearchChange }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSections, setExpandedSections] = useState({});
 
@@ -85,6 +85,13 @@ export default function Sidebar({ sections, selectedUnit, onSelectUnit, selected
           placeholder="Search units..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          className={`w-full px-3 py-2 ${config.inputBg} border ${config.inputBorder} rounded text-sm text-gray-200 placeholder-gray-500 focus:outline-none ${config.inputFocus} mb-2`}
+        />
+        <input
+          type="text"
+          placeholder="Search quotes..."
+          value={quoteSearchQuery}
+          onChange={(e) => onQuoteSearchChange(e.target.value)}
           className={`w-full px-3 py-2 ${config.inputBg} border ${config.inputBorder} rounded text-sm text-gray-200 placeholder-gray-500 focus:outline-none ${config.inputFocus}`}
         />
       </div>

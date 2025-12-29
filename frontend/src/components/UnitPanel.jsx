@@ -1,7 +1,13 @@
 import QuoteCategory from './QuoteCategory';
+import QuoteSearchResults from './QuoteSearchResults';
 
-export default function UnitPanel({ unit, race = 'protoss' }) {
+export default function UnitPanel({ unit, race = 'protoss', sections = [], quoteSearchQuery = '' }) {
   const primaryClass = race === 'terran' ? 'text-terran-primary' : race === 'zerg' ? 'text-zerg-primary' : 'text-protoss-primary';
+
+  // Show search results when there's a quote search query
+  if (quoteSearchQuery) {
+    return <QuoteSearchResults sections={sections} searchQuery={quoteSearchQuery} race={race} />;
+  }
 
   if (!unit) {
     return (

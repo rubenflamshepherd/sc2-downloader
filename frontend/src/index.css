@@ -5,6 +5,16 @@
   --color-protoss-secondary: #7c3aed;
   --color-protoss-dark: #1a1a2e;
   --color-protoss-darker: #0f0f1a;
+
+  --color-terran-primary: #f59e0b;
+  --color-terran-secondary: #ef4444;
+  --color-terran-dark: #1a1a1a;
+  --color-terran-darker: #0f0f0f;
+
+  --color-zerg-primary: #a855f7;
+  --color-zerg-secondary: #22c55e;
+  --color-zerg-dark: #1a1a1e;
+  --color-zerg-darker: #0f0f12;
 }
 
 :root {

@@ -8,12 +8,14 @@ const RACES = ['protoss', 'terran', 'zerg'];
 function App() {
   const [selectedRace, setSelectedRace] = useState('protoss');
   const [selectedUnit, setSelectedUnit] = useState(null);
+  const [quoteSearchQuery, setQuoteSearchQuery] = useState('');
 
   const currentSections = quotations.races[selectedRace]?.sections || [];
 
   const handleRaceChange = (race) => {
     setSelectedRace(race);
     setSelectedUnit(null);
+    setQuoteSearchQuery('');
   };
 
   return (
@@ -25,8 +27,15 @@ function App() {
         selectedRace={selectedRace}
         onRaceChange={handleRaceChange}
         races={RACES}
+        quoteSearchQuery={quoteSearchQuery}
+        onQuoteSearchChange={setQuoteSearchQuery}
       />
-      <UnitPanel unit={selectedUnit} race={selectedRace} />
+      <UnitPanel
+        unit={selectedUnit}
+        race={selectedRace}
+        sections={currentSections}
+        quoteSearchQuery={quoteSearchQuery}
+      />
     </div>
   );
 }
